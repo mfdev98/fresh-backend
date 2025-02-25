@@ -140,6 +140,7 @@ export class PropertyService {
 			text,
 		} = input.search;
 
+
 		if (memberId) match.memberId = shapeIntoMongoObjectId(memberId);
 		if (locationList && locationList.length) match.propertyLocation = { $in: locationList };
 		if (roomsList && roomsList.length) match.propertyRooms = { $in: roomsList };
