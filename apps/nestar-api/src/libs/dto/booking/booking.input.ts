@@ -181,7 +181,7 @@ export class AllBookingsInquiry {
 	search: ALBISearch;
 }
 @InputType()
-export class OrdinaryInquiry {
+export class BOrdinaryInquiry {
 	@IsNotEmpty()
 	@Min(1)
 	@Field(() => Int)

@@ -5,6 +5,8 @@ import { View } from '../../libs/dto/view/view';
 import { ViewInput } from '../../libs/dto/view/view.input';
 import { T } from '../../libs/types/common';
 import { OrdinaryInquiry } from '../../libs/dto/property/property.input';
+import { BOrdinaryInquiry } from '../../libs/dto/booking/booking.input';
+
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { Properties } from '../../libs/dto/property/property';
 import { lookupVisit } from '../../libs/config';
@@ -66,7 +68,7 @@ export class ViewService {
 		return result;
 	}
 
-	public async getVisitedBookings(memberId: Object, input: OrdinaryInquiry): Promise<Bookings> {
+	public async getVisitedBookings(memberId: Object, input: BOrdinaryInquiry): Promise<Bookings> {
 		const { page, limit } = input;
 		const match: T = { viewGroup: ViewGroup.BOOKING, memberId: memberId };
 

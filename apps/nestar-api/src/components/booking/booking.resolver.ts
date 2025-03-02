@@ -4,9 +4,9 @@ import { Bookings, Booking } from '../../libs/dto/booking/booking';
 import {
 	AgentBookingsInquiry,
 	AllBookingsInquiry,
-	OrdinaryInquiry,
 	BookingsInquiry,
 	BookingInput,
+	BOrdinaryInquiry,
 } from '../../libs/dto/booking/booking.input';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { MemberType } from '../../libs/enums/member.enum';
@@ -37,7 +37,7 @@ export class BookingResolver {
 
 	@UseGuards(WithoutGuard)
 	@Query((returns) => Booking)
-	public async getBooking(@Args('propertyId') input: string, @AuthMember('_id') memberId: ObjectId): Promise<Booking> {
+	public async getBooking(@Args('bookingId') input: string, @AuthMember('_id') memberId: ObjectId): Promise<Booking> {
 		console.log('Query: getBooking');
 		const bookingId = shapeIntoMongoObjectId(input);
 		console.log('id, member: ', bookingId);
@@ -67,25 +67,25 @@ export class BookingResolver {
 		return await this.bookingService.getBookings(memberId, input);
 	}
 
-	@UseGuards(AuthGuard)
-	@Query((returns) => Bookings)
-	public async getFavorites(
-		@Args('input') input: OrdinaryInquiry,
-		@AuthMember('_id') memberId: ObjectId,
-	): Promise<Bookings> {
-		console.log('Querty: getFavorites');
-		return await this.bookingService.getFavorites(memberId, input);
-	}
+	// @UseGuards(AuthGuard)
+	// @Query((returns) => Bookings)
+	// public async getFavorites(
+	// 	@Args('input') input: BOrdinaryInquiry,
+	// 	@AuthMember('_id') memberId: ObjectId,
+	// ): Promise<Bookings> {
+	// 	console.log('Querty: getFavorites');
+	// 	return await this.bookingService.getFavorites(memberId, input);
+	// }
 
-	@UseGuards(AuthGuard)
-	@Query((returns) => Bookings)
-	public async getVisited(
-		@Args('input') input: OrdinaryInquiry,
-		@AuthMember('_id') memberId: ObjectId,
-	): Promise<Bookings> {
-		console.log('Querty: getVisited');
-		return await this.bookingService.getVisited(memberId, input);
-	}
+	// @UseGuards(AuthGuard)
+	// @Query((returns) => Bookings)
+	// public async getVisited(
+	// 	@Args('input') input: BOrdinaryInquiry,
+	// 	@AuthMember('_id') memberId: ObjectId,
+	// ): Promise<Bookings> {
+	// 	console.log('Querty: getVisited');
+	// 	return await this.bookingService.getVisited(memberId, input);
+	// }
 
 	@Roles(MemberType.AGENT)
 	@UseGuards(RolesGuard)
@@ -101,7 +101,7 @@ export class BookingResolver {
 	@UseGuards(AuthGuard)
 	@Mutation(() => Booking)
 	public async likeTargetBooking(
-		@Args('propertyId') input: string,
+		@Args('bookingId') input: string,
 		@AuthMember('_id') memberId: ObjectId,
 	): Promise<Booking> {
 		console.log('Mutation: likeTargetBooking');

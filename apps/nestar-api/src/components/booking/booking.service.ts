@@ -5,9 +5,9 @@ import { Bookings, Booking } from '../../libs/dto/booking/booking';
 import {
 	AgentBookingsInquiry,
 	AllBookingsInquiry,
-	OrdinaryInquiry,
 	BookingsInquiry,
 	BookingInput,
+	BOrdinaryInquiry,
 } from '../../libs/dto/booking/booking.input';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { MemberService } from '../member/member.service';
@@ -139,11 +139,13 @@ export class BookingService {
 		if (text) match.bookingTitle = { $regex: new RegExp(text, 'i') };
 	}
 
-	public async getFavorites(memberId: ObjectId, input: OrdinaryInquiry): Promise<Bookings> {
+	// TO-DO
+
+	public async getFavorites(memberId: ObjectId, input: BOrdinaryInquiry): Promise<Bookings> {
 		return await this.likeService.getFavoriteBookings(memberId, input);
 	}
 
-	public async getVisited(memberId: ObjectId, input: OrdinaryInquiry): Promise<Bookings> {
+	public async getVisited(memberId: ObjectId, input: BOrdinaryInquiry): Promise<Bookings> {
 		return await this.viewService.getVisitedBookings(memberId, input);
 	}
 
