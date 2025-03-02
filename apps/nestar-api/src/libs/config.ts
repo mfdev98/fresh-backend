@@ -109,6 +109,10 @@ export const shapeIntoMongoObjectId = (target: any) => {
 	return typeof target === 'string' ? new ObjectId(target) : target;
 };
 
+export const isEqual = (id1: any, id2: any): boolean => {
+	return id1.toString() === id2.toString();
+};
+
 export const lookupMember = {
 	$lookup: {
 		from: 'members',

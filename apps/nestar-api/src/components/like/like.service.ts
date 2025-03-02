@@ -10,12 +10,17 @@ import { Properties } from '../../libs/dto/property/property';
 import { LikeGroup } from '../../libs/enums/like.enum';
 import { lookupFavorite } from '../../libs/config';
 import { Bookings } from '../../libs/dto/booking/booking';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationInput } from '../../libs/dto/notification/notification.input';
 
 @Injectable()
 export class LikeService {
-	constructor(@InjectModel('Like') private readonly likeModel: Model<Like>) {}
+	constructor(
+		@InjectModel('Like') private readonly likeModel: Model<Like>,
+		private notificationService: NotificationService,
+	) {}
 
-	public async toggleLike(input: LikeInput): Promise<number> {
+	public async toggleLike(input: LikeInput, notification: NotificationInput): Promise<number> {
 		const search: T = { memberId: input.memberId, likeRefId: input.likeRefId },
 			exist = await this.likeModel.findOne(search).exec();
 		let modifier = 1;
@@ -23,9 +28,11 @@ export class LikeService {
 		if (exist) {
 			await this.likeModel.findOneAndDelete(search).exec();
 			modifier = -1;
+			await this.notificationService.deleteNotification(notification.authorId, notification.notificationRefId);
 		} else {
 			try {
 				await this.likeModel.create(input);
+				await this.notificationService.createNotification(notification);
 			} catch (err) {
 				console.log('Error, Service.model:', err.message);
 				throw new BadRequestException(Message.CREATE_FAILED);
