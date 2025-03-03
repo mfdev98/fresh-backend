@@ -21,14 +21,20 @@ import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
+import { NotificationInput } from '../../libs/dto/notification/notification.input';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
+import { NotificationService } from '../notification/notification.service';
+import { Member } from '../../libs/dto/member/member';
 
 @Injectable()
 export class PropertyService {
 	constructor(
 		@InjectModel('Property') private readonly propertyModel: Model<Property>,
+		@InjectModel('Member') private readonly memberModel: Model<Member>,
 		private memberService: MemberService,
 		private viewService: ViewService,
 		private likeService: LikeService,
+		private notificationService: NotificationService,
 	) {}
 
 	public async createProperty(input: PropertyInput): Promise<Property> {
@@ -140,7 +146,6 @@ export class PropertyService {
 			text,
 		} = input.search;
 
-
 		if (memberId) match.memberId = shapeIntoMongoObjectId(memberId);
 		if (locationList && locationList.length) match.propertyLocation = { $in: locationList };
 		if (roomsList && roomsList.length) match.propertyRooms = { $in: roomsList };
@@ -200,6 +205,7 @@ export class PropertyService {
 	}
 
 	public async likeTargetProperty(memberId: ObjectId, likeRefId: ObjectId): Promise<Property> {
+		const member = await this.memberModel.findById(memberId).exec();
 		const target: Property = await this.propertyModel
 			.findOne({ _id: likeRefId, propertyStatus: PropertyStatus.ACTIVE })
 			.exec();
@@ -215,6 +221,21 @@ export class PropertyService {
 		const result = await this.propertyStatsEditor({ _id: likeRefId, targetKey: 'propertyLikes', modifier: modifier });
 
 		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+
+		//  -----------------notification----------------
+		if (modifier > 0) {
+			// Assuming modifier > 0 means a like was added
+			await this.notificationService.createNotification(memberId, {
+				notificationType: NotificationType.LIKE,
+				notificationGroup: NotificationGroup.PROPERTY,
+				notificationTitle: 'New Like on your Stay',
+				notificationDesc: `${member.memberNick} liked your Stay!`,
+				authorId: memberId,
+				receiverId: target.memberId,
+				propertyId: likeRefId,
+			});
+		}
+
 		return result;
 	}
 

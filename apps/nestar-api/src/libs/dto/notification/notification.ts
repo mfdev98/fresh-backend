@@ -1,15 +1,11 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { ObjectId } from 'mongoose';
 import { NotificationGroup, NotificationStatus, NotificationType } from '../../enums/notification.enum';
-import { Member } from '../member/member';
-import { Property } from '../property/property';
-import { Booking } from '../booking/booking';
-import { BoardArticle } from '../board-article/board-article';
 
 @ObjectType()
 export class Notification {
 	@Field(() => String)
-	_id: string;
+	_id: ObjectId;
 
 	@Field(() => NotificationType)
 	notificationType: NotificationType;
@@ -23,41 +19,27 @@ export class Notification {
 	@Field(() => String)
 	notificationTitle: string;
 
-	@Field(() => String, { nullable: true })
-	notificationDesc?: string;
+	@Field(() => String)
+	notificationDesc: string;
 
 	@Field(() => String)
 	authorId: ObjectId;
 
 	@Field(() => String)
-	receiverId: ObjectId;
+	receiverId: String;
 
-	@Field(() => String)
-	notificationRefId: ObjectId;
+	@Field(() => String, { nullable: true })
+	messageId?: ObjectId;
+
+	@Field(() => String, { nullable: true })
+	propertyId?: ObjectId;
+
+	@Field(() => String, { nullable: true })
+	articleId?: ObjectId;
 
 	@Field(() => Date)
 	createdAt: Date;
 
 	@Field(() => Date)
 	updatedAt: Date;
-
-	@Field(() => Member)
-	senderData: Member;
-
-	@Field(() => Property, { nullable: true })
-	propertyData?: Property;
-
-	@Field(() => Booking, { nullable: true })
-	bookingData?: Booking;
-
-	@Field(() => BoardArticle, { nullable: true })
-	blogData?: BoardArticle;
 }
-
-/* @ObjectType()
-export class Notifications {
-    @Field(() => [Notification])
-    notification: Notification[];
-
-
-} */

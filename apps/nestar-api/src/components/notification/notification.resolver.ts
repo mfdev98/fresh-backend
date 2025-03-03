@@ -2,42 +2,44 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { NotificationService } from './notification.service';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { Like } from '../../libs/dto/like/like';
+import { Notification } from '../../libs/dto/notification/notification';
 import { AuthMember } from '../auth/decorators/authMember.decorator';
 import { ObjectId } from 'mongoose';
-import { shapeIntoMongoObjectId } from '../../libs/config';
-import { LikeInput } from '../../libs/dto/like/like.input';
 import { NotificationInput } from '../../libs/dto/notification/notification.input';
-import { Notification } from '../../libs/dto/notification/notification';
+import { shapeIntoMongoObjectId } from '../../libs/config';
+import { NotificationUpdate } from '../../libs/dto/notification/notification.update';
+import { Member } from '../../libs/dto/member/member';
 
 @Resolver()
 export class NotificationResolver {
-    constructor(private readonly notificationService: NotificationService) { }
+	constructor(private readonly notificationService: NotificationService) {}
 
-    @UseGuards(AuthGuard)
-    @Mutation((returns) => Notification)
-    public async createNotification(@Args('input') input: NotificationInput, @AuthMember('_id') memberId: ObjectId): Promise<Notification> {
-        console.log('Mutation: Create Notification');
-        return await this.notificationService.createNotification(input);
-    }
+	@UseGuards(AuthGuard)
+	@Query((returns) => Notification)
+	public async getNotification(
+		@Args('notificationId') input: string,
+		@AuthMember('_id') memberId: ObjectId,
+	): Promise<Notification> {
+		console.log('Query: getNotification');
+		const notificationId = shapeIntoMongoObjectId(input);
+		return await this.notificationService.getNotification(memberId, notificationId);
+	}
 
- 
-    @UseGuards(AuthGuard)
-    @Query(() => [Notification])
-    public async getMemberNotifications( @AuthMember('_id') memberId: ObjectId): Promise<Notification[]> {
-        console.log('Query: Get Notifications');
-        console.log(await this.notificationService.getMemberNotifications(memberId));
+	@UseGuards(AuthGuard)
+	@Query(() => [Notification], { name: 'getNotifications' })
+	async getNotifications(@Args('receiverId') input: string): Promise<Notification[]> {
+		const receiverId = shapeIntoMongoObjectId(input);
+		return this.notificationService.getNotifications(receiverId);
+	}
 
-        return await this.notificationService.getMemberNotifications(memberId)
-    }
-
- 
-    @UseGuards(AuthGuard)
-    @Mutation((returns) => Notification)
-    public async removeNotification(@Args('id') input: string): Promise<Notification> {
-        console.log('Query: removePlantByAdmin');
-        const id = shapeIntoMongoObjectId(input);
-        return await this.notificationService.removeNotification(id);
-    }
-
+	@UseGuards(AuthGuard)
+	@Mutation(() => Notification)
+	public async updateNotification(
+		@Args('input') input: NotificationUpdate,
+		@AuthMember('_id') authorId: ObjectId,
+	): Promise<Notification> {
+		console.log('Mutation: updateNotification');
+		input._id = shapeIntoMongoObjectId(input._id);
+		return await this.notificationService.updateNotification(authorId, input);
+	}
 }

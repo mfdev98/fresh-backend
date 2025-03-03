@@ -12,16 +12,12 @@ import {
 	lookupFollowerData,
 	lookupFollowingData,
 } from '../../libs/config';
-import { NotificationService } from '../notification/notification.service';
-import { NotificationInput } from '../../libs/dto/notification/notification.input';
-import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
 
 @Injectable()
 export class FollowService {
 	constructor(
 		@InjectModel('Follow') private readonly followModel: Model<Follower | Following>,
 		private readonly memberService: MemberService,
-		private readonly notificationService: NotificationService,
 	) {}
 
 	public async subscribe(followerId: ObjectId, followingId: ObjectId): Promise<Follower> {
@@ -32,15 +28,7 @@ export class FollowService {
 		const targetMember = await this.memberService.getMember(null, followingId);
 		if (!targetMember) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
-		const notification: NotificationInput = {
-			authorId: followerId,
-			notificationType: NotificationType.FOLLOW,
-			notificationGroup: NotificationGroup.SUBSCRIPTION,
-			notificationRefId: followingId,
-			notificationTitle: targetMember.memberNick,
-			receiverId: followingId,
-		};
-		const result = await this.registerSubscription(followerId, followingId, notification);
+		const result = await this.registerSubscription(followerId, followingId);
 
 		await this.memberService.memberStatsEditor({
 			_id: followerId,
@@ -56,17 +44,12 @@ export class FollowService {
 		return result;
 	}
 
-	private async registerSubscription(
-		followerId: ObjectId,
-		followingId: ObjectId,
-		notification: NotificationInput,
-	): Promise<Follower> {
+	private async registerSubscription(followerId: ObjectId, followingId: ObjectId): Promise<Follower> {
 		try {
 			const result = await this.followModel.create({
 				followingId: followingId,
 				followerId: followerId,
 			});
-			await this.notificationService.createNotification(notification);
 			return result;
 		} catch (err) {
 			console.log('Error, Service.model:', err.message);
@@ -84,7 +67,6 @@ export class FollowService {
 				followerId: followerId,
 			})
 			.exec();
-		this.notificationService.deleteNotification(followerId, followingId);
 		if (!result) throw new InternalServerErrorException(Message.NO_DATA_FOUND);
 
 		await this.memberService.memberStatsEditor({ _id: followerId, targetKey: 'memberFollowings', modifier: -1 });

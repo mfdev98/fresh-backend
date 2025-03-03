@@ -21,14 +21,21 @@ import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
+import { NotificationInput } from '../../libs/dto/notification/notification.input';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
+import { NotificationService } from '../notification/notification.service';
+import { Member } from '../../libs/dto/member/member';
 
 @Injectable()
 export class BookingService {
 	constructor(
 		@InjectModel('Booking') private readonly bookingModel: Model<Booking>,
+		@InjectModel('Member') private readonly memberModel: Model<Member>,
+
 		private memberService: MemberService,
 		private viewService: ViewService,
 		private likeService: LikeService,
+		private notificationService: NotificationService,
 	) {}
 
 	public async createBooking(input: BookingInput): Promise<Booking> {
@@ -182,6 +189,8 @@ export class BookingService {
 	}
 
 	public async likeTargetBooking(memberId: ObjectId, likeRefId: ObjectId): Promise<Booking> {
+		const member = await this.memberModel.findById(memberId).exec();
+
 		const target: Booking = await this.bookingModel
 			.findOne({ _id: likeRefId, bookingStatus: BookingStatus.ACTIVE })
 			.exec();
@@ -197,6 +206,19 @@ export class BookingService {
 		const result = await this.bookingStatsEditor({ _id: likeRefId, targetKey: 'bookingLikes', modifier: modifier });
 
 		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+		//  -----------------notification----------------
+		if (modifier > 0) {
+			// Assuming modifier > 0 means a like was added
+			await this.notificationService.createNotification(memberId, {
+				notificationType: NotificationType.LIKE,
+				notificationGroup: NotificationGroup.PROPERTY,
+				notificationTitle: 'New Like on your property',
+				notificationDesc: `${member.memberNick} liked your property!`,
+				authorId: memberId,
+				receiverId: target.memberId,
+				propertyId: likeRefId,
+			});
+		}
 		return result;
 	}
 

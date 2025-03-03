@@ -18,14 +18,21 @@ import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
 import { LikeService } from '../like/like.service';
+import { NotificationInput } from '../../libs/dto/notification/notification.input';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
+import { NotificationService } from '../notification/notification.service';
+import { Member } from '../../libs/dto/member/member';
 
 @Injectable()
 export class BoardArticleService {
 	constructor(
 		@InjectModel('BoardArticle') private readonly boardArticleModel: Model<BoardArticle>,
+		@InjectModel('Member') private readonly memberModel: Model<Member>,
+
 		private readonly memberService: MemberService,
 		private readonly viewService: ViewService,
 		private likeService: LikeService,
+		private notificationService: NotificationService,
 	) {}
 
 	public async createBoardArticle(memberId: ObjectId, input: BoardArticleInput): Promise<BoardArticle> {
@@ -38,7 +45,6 @@ export class BoardArticleService {
 				targetKey: 'memberArticles',
 				modifier: 1,
 			});
-
 			return result;
 		} catch (err) {
 			console.log('Error, Service.Model:', err.message);
@@ -128,6 +134,7 @@ export class BoardArticleService {
 	}
 
 	public async likeTargetBoardArticle(memberId: ObjectId, likeRefId: ObjectId): Promise<BoardArticle> {
+		const member = await this.memberModel.findById(memberId).exec();
 		const target: BoardArticle = await this.boardArticleModel
 			.findOne({ _id: likeRefId, articleStatus: BoardArticleStatus.ACTIVE })
 			.exec();
@@ -147,6 +154,18 @@ export class BoardArticleService {
 		});
 
 		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+		if (modifier > 0) {
+			// Assuming modifier > 0 means a like was added
+			await this.notificationService.createNotification(memberId, {
+				notificationType: NotificationType.LIKE,
+				notificationGroup: NotificationGroup.ARTICLE,
+				notificationTitle: 'New Like on your article!',
+				notificationDesc: `${member.memberNick} liked your Article!`,
+				authorId: memberId,
+				receiverId: target.memberId,
+				propertyId: likeRefId,
+			});
+		}
 		return result;
 	}
 
