@@ -12,7 +12,7 @@ services:
     networks:
       - monorepo-network # 리스트 형식으로 수정
 
-    command: bash -c "npm install && npm run build && npm run start:prod"
+    command: bash -c "rm -rf dist && npm install && npm run build && npm run start:prod"
 
   freshTour-batch:
     container_name: freshTour-batch
