@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  freshTour-api:
+    container_name: freshTour-api
+    restart: always
+    image: node:20.10.0
+    ports:
+      - '4001:3007' # 리스트 형식으로 수정
+    volumes:
+      - ./:/usr/src/freshTour
+    working_dir: /usr/src/freshTour
+
+    networks:
+      - monorepo-network # 리스트 형식으로 수정
+
+    command: bash -c "npm install && npm run build && npm run start:prod"
+
+  freshTour-batch:
+    container_name: freshTour-batch
+    restart: unless-stopped
+    image: node:20.10.0
+    ports:
+      - '4002:3008' # 리스트 형식으로 수정
+    volumes:
+      - ./:/usr/src/freshTour
+    working_dir: /usr/src/freshTour
+
+    networks:
+      - monorepo-network # 리스트 형식으로 수정
+
+    command: bash -c "npm install && npm run build && npm run start:prod:batch"
+
+networks:
+  monorepo-network:
+    driver: bridge
