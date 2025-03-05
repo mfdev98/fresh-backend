@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   freshTour-api:
     container_name: freshTour-api
